@@ -4,11 +4,15 @@ build
 
 # Project files
 *.iml
+.classpath
 .idea
+.project
+.settings
 
 # Misc
 .DS_Store
 /bin/
-/nodes.json
-/nodes.json.bak
-/.key
+nodes.json
+nodes.json.bak
+.key
+
