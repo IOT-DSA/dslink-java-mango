@@ -8,6 +8,10 @@ import org.dsa.iot.dslink.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//Timer utilities to initialize the DSLink connections
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by Peter Weise on 9/1/15.
  */
@@ -65,56 +69,14 @@ public class MangoConn {
 
     //access point to start the link connection
     public void start() {
-        init();
+		init();
         setLogin();
     }
 
     //log into the server and establish a connection, saving the cookie for session access
     private void setLogin() {
-        try {
-            String password = String.valueOf(node.getPassword());
-
-            ResponseEntityUserModel user = api.login(node.getAttribute("username").getString(), password, false);
-            if (client.getCookie().equals("")) {
-                String cookie = user.getHeaders().getCookie().split(";")[0].replaceAll("\\[", "");
-                client.setCookie(cookie);
-                LOGGER.info("Setting Cookie: " + cookie);
-                
-            }
-
-            String xsrfToken = "";
-            for(String cookie : client.getResponseHeaders().get("Set-Cookie")){
-            	LOGGER.info("Got cookie: " + cookie);
-            	if(cookie.contains("XSRF-TOKEN")){
-            		String xsrfCookie = cookie.split(";")[0].replaceAll("\\[", "");
-            		String token = xsrfCookie.split("=")[1];
-            		xsrfToken = token;
-            		LOGGER.info("Setting XSRF Token: " + token);
-            		client.addDefaultHeader("X-XSRF-TOKEN", token);
-            	}
-
-            	if(cookie.contains("MANGO")) {
-                    String xsrfCookie = cookie.split(";")[0].replaceAll("\\[", "");
-
-                    String key = xsrfCookie.split("=")[0];
-                    String value = xsrfCookie.split("=")[1];
-                    client.setCookie(key + "=" + value + ";" + "XSRF-TOKEN=" + xsrfToken);
-                }
-            }
-            
-            LOGGER.info("{} logged in", node.getAttribute("username"));
-            MangoFolder mf = new MangoFolder(node, api, this);
-            mf.init();
-        } catch (ApiException e) {
-            LOGGER.error("setLogin\n\tcode: {}\n\tmessage: {}\n\theader: {}\n\tbody: {}\n{}",
-                    e.getCode(), e.getMessage(), e.getResponseHeaders(), e.getResponseBody(), e);
-            Node parent = node.getParent();
-            parent.removeChild(node, false);
-        } catch (Exception e) {
-            LOGGER.error("{}", e);
-            Node parent = node.getParent();
-            parent.removeChild(node, false);
-        }
+		initMangoConn iConn = new initMangoConn();
+		iConn.start();
     }
 
     //log out the user and cleanup the tree
@@ -130,5 +92,71 @@ public class MangoConn {
         Node parent = node.getParent();
         parent.removeChild(node, false);
     }
+
+	protected void initMangoFolder() {
+		MangoFolder mf = new MangoFolder(node, api, this);
+		mf.init();
+	}
+
+    private class initMangoConn extends TimerTask {
+		private Timer timer;
+
+		public initMangoConn() {}
+
+		public void start() {
+			timer = new Timer();
+			timer.schedule(this, 100, 5000);
+		}
+
+		@Override
+        public void run() {
+			LOGGER.info("Trying to connect...");
+			try {
+				String password = String.valueOf(node.getPassword());
+
+				ResponseEntityUserModel user = api.login(node.getAttribute("username").getString(), password, false);
+				if (client.getCookie().equals("")) {
+					String cookie = user.getHeaders().getCookie().split(";")[0].replaceAll("\\[", "");
+					client.setCookie(cookie);
+					LOGGER.info("Setting Cookie: " + cookie);
+				}
+
+				String xsrfToken = "";
+				for(String cookie : client.getResponseHeaders().get("Set-Cookie")){
+					LOGGER.info("Got cookie: " + cookie);
+					if(cookie.contains("XSRF-TOKEN")){
+						String xsrfCookie = cookie.split(";")[0].replaceAll("\\[", "");
+						String token = xsrfCookie.split("=")[1];
+						xsrfToken = token;
+						LOGGER.info("Setting XSRF Token: " + token);
+						client.addDefaultHeader("X-XSRF-TOKEN", token);
+					}
+
+					if(cookie.contains("MANGO")) {
+						String xsrfCookie = cookie.split(";")[0].replaceAll("\\[", "");
+
+						String key = xsrfCookie.split("=")[0];
+						String value = xsrfCookie.split("=")[1];
+						client.setCookie(key + "=" + value + ";" + "XSRF-TOKEN=" + xsrfToken);
+					}
+				}
+
+				LOGGER.info("{} logged in", node.getAttribute("username"));
+				initMangoFolder();
+				this.cancel();
+			} catch (ApiException e) {
+				LOGGER.error("setLogin\n\tcode: {}\n\tmessage: {}\n\theader: {}\n\tbody: {}\n{}",
+						e.getCode(), e.getMessage(), e.getResponseHeaders(), e.getResponseBody(), e);
+				LOGGER.error("Connection rejected. Waiting...");
+				//Node parent = node.getParent();
+				//parent.removeChild(node, false);
+			} catch (Exception e) {
+				LOGGER.error("{}", e);
+				LOGGER.error("Connection not found. Waiting...");
+				//Node parent = node.getParent();
+				//parent.removeChild(node, false);
+			}
+		}
+	}
 
 }

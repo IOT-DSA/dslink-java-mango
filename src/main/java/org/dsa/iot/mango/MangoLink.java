@@ -51,7 +51,8 @@ public class MangoLink {
         if (node.getChildren() == null) return;
         for (Node child: node.getChildren().values()) {
             if (child.getAttribute("url") != null) {
-                MangoConn conn = new MangoConn(this, child);
+				updateRate = child.getAttribute("updateRate").getNumber().intValue();
+                MangoConn conn = new MangoConn(MangoLink.this, child);
                 conn.start();
             } else if (!"defs".equals(child.getName())
                         && child.getAction() == null) {
@@ -93,4 +94,5 @@ public class MangoLink {
             conn.start();
         }
     }
+
 }

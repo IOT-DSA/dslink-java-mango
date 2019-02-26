@@ -179,7 +179,7 @@ public class MangoFolder {
                                     val = new Value(num);
                                     break;
                                 case "Binary":
-                                    Boolean bool = Boolean.getBoolean("value");
+                                    Boolean bool = Boolean.valueOf(value);
                                     val = new Value(bool);
                                     break;
                                 case "Multistate":
