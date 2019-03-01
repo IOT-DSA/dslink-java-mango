@@ -4,7 +4,6 @@ package io.swagger.client.model;
 
 
 import io.swagger.annotations.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**

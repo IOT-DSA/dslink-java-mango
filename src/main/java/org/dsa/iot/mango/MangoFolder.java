@@ -173,33 +173,38 @@ public class MangoFolder {
                             endIndex = b.indexOf("\n", beginIndex);
                             String value = b.substring(beginIndex + 7, endIndex);
                             Value val = null;
-                            switch (type) {
-                                case "Numeric":
-                                    Float num = Float.valueOf(value);
-                                    val = new Value(num);
-                                    break;
-                                case "Binary":
-                                    Boolean bool = Boolean.getBoolean("value");
-                                    val = new Value(bool);
-                                    break;
-                                case "Multistate":
-                                	Integer myInt = Integer.parseInt(value);
-                                	val = new Value(myInt);
-                                    break;
-                                case "Image":
-                                    LOGGER.warn("mangoFolder:RealTimeModel - unimplemented data type: IMAGE");
-                                    break;
-                                case "Alphanumeric":
-                                    String s = String.valueOf(value);
-                                    val = new Value(s);
-                                    break;
+                            //Don't set nulls
+                            if(value !=null && !"null".equals(value)) {
+                                switch (type) {
+                                    case "Numeric":
+                                        Float num = Float.valueOf(value);
+                                        val = new Value(num);
+                                        break;
+                                    case "Binary":
+                                        Boolean bool = Boolean.getBoolean("value");
+                                        val = new Value(bool);
+                                        break;
+                                    case "Multistate":
+                                    	Integer myInt = Integer.parseInt(value);
+                                    	val = new Value(myInt);
+                                        break;
+                                    case "Image":
+                                        LOGGER.warn("mangoFolder:RealTimeModel - unimplemented data type: IMAGE");
+                                        break;
+                                    case "Alphanumeric":
+                                        String s = String.valueOf(value);
+                                        val = new Value(s);
+                                        break;
+                                }
+                                no.setValue(val);
                             }
-                            no.setValue(val);
                             conn.setClientNode(original);
                         } catch (ApiException e) {
+                            LOGGER.error(e.getMessage(), e);
                             LOGGER.error("Data point has no data - {}", no.getDisplayName());
                             no.setValue(null);
                         } catch (NumberFormatException e) {
+                            LOGGER.error(e.getMessage(), e);
                             LOGGER.error("Point Update error - {}", e);
                             no.setValue(null);
                         }

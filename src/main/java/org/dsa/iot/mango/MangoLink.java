@@ -13,6 +13,8 @@ import org.dsa.iot.dslink.util.handler.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.client.api.MangoDSLApi.AuthenticationType;
+
 public class MangoLink {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MangoLink.class);
@@ -63,10 +65,12 @@ public class MangoLink {
     //set up action for setting the connection information
     private Action setPathAction() {
         Action act = new Action(Permission.READ, new CreateConnHandler());
-        act.addParameter(new Parameter("Name", ValueType.STRING).setPlaceHolder("Local Host"));
-        act.addParameter(new Parameter("URL", ValueType.STRING).setPlaceHolder("http://localhost:8000/rest"));
-        act.addParameter(new Parameter("Username", ValueType.STRING).setPlaceHolder("admin"));
-        act.addParameter(new Parameter("Password", ValueType.STRING).setPlaceHolder("admin")
+        act.addParameter(new Parameter("Name", ValueType.STRING).setDefaultValue(new Value("Local Host")));
+        act.addParameter(new Parameter("URL", ValueType.STRING).setDefaultValue(new Value("http://localhost:8081/rest")));
+        act.addParameter(new Parameter("Use Token", ValueType.BOOL).setDefaultValue(new Value(true)));
+        act.addParameter(new Parameter("Token", ValueType.STRING).setDefaultValue(new Value("put token here")));
+        act.addParameter(new Parameter("Username", ValueType.STRING).setDefaultValue(new Value("admin")));
+        act.addParameter(new Parameter("Password", ValueType.STRING).setDefaultValue(new Value("admin"))
                 .setEditorType(EditorType.PASSWORD));
         act.addParameter(new Parameter("Default Polling Interval", ValueType.NUMBER, new Value(updateRate)));
         return act;
@@ -81,11 +85,19 @@ public class MangoLink {
             String name = event.getParameter("Name", ValueType.STRING).getString();
             String username = event.getParameter("Username", ValueType.STRING).getString();
             String pw = event.getParameter("Password", ValueType.STRING).getString();
+            String token = event.getParameter("Token", ValueType.STRING).getString();
+            boolean useToken = event.getParameter("Use Token", ValueType.BOOL).getBool();
             updateRate = event.getParameter("Default Polling Interval", ValueType.NUMBER).getNumber().intValue();
             NodeBuilder b = node.createChild(name, false);
             b.setAttribute("url", new Value(url));
-            b.setAttribute("username", new Value(username));
-            b.setPassword(pw.toCharArray());
+            if(useToken) {
+                b.setAttribute("apiKey", new Value(token));
+                b.setAttribute("authType", new Value(AuthenticationType.TOKEN.name()));
+            }else {
+                b.setAttribute("username", new Value(username));
+                b.setPassword(pw.toCharArray());
+                b.setAttribute("authType", new Value(AuthenticationType.USER.name()));
+            }
             b.setAttribute("updateRate", new Value(updateRate));
             Node child = b.build();
             LOGGER.info("Base URL set - {}", child.getAttribute("url"));

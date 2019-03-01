@@ -1,6 +1,6 @@
 {
   "name": "dslink-java-mango",
-  "version": "1.4.0-SNAPSHOT",
+  "version": "1.4.0",
   "description": "A Java DSLink for Mango",
   "license": "Apache",
   "author": {

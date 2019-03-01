@@ -130,42 +130,79 @@ public class MangoBodyBuilder {
 	                    case "Numeric":
 	                        node.setValueType(ValueType.NUMBER);
 	                        node.setAttribute("type", new Value(type));
-	                        Number num = jo.get("value");
-	                        model.setValue(num);
-	                        val = new Value(num);
-	                        node.setValue(val);
+	                        Object o = jo.get("value");
+                            if(o instanceof Number) {
+                                Number num = jo.get("value");
+                                model.setValue(num);
+                                val = new Value(num);
+                                node.setValue(val);
+                            }else if(o == null){
+                                if(LOGGER.isDebugEnabled())
+                                    LOGGER.debug("Numeric point with xid : " + jo.get("xid") + " has no value.");
+                            }else {
+                                LOGGER.warn("Numeric point with xid : " + jo.get("xid") + " has non numeric value of " + o);
+                            }
+
 	                        break;
 	                    case "Binary":
 	                        node.setValueType(ValueType.BOOL);
 	                        node.setAttribute("type", new Value(type));
-	                        boolean b = jo.get("value");
-	                        model.setValue(b);
-	                        val = new Value(b);
-	                        node.setValue(val);
+	                        Object b = jo.get("value");
+	                        if(b instanceof Boolean) {
+        	                        model.setValue(b);
+        	                        val = new Value((Boolean)b);
+        	                        node.setValue(val);
+	                        }else if (b == null){
+	                            if(LOGGER.isDebugEnabled())
+	                                LOGGER.debug("Binary point with xid : " + jo.get("xid") + " has no value");
+	                        }else {
+	                            LOGGER.warn("Binary point with xid : " + jo.get("xid") + " has non binary value of " + b);
+	                        }
 	                        break;
 	                    case "Multistate":
 	                        node.setValueType(ValueType.NUMBER);
 	                        node.setAttribute("type", new Value(type));
-	                        Number mul = jo.get("value");
-	                        model.setValue(mul);
-	                        val = new Value(mul);
-	                        node.setValue(val);
+	                        Object mul = jo.get("value");
+	                        if(mul instanceof Number) {
+        	                        model.setValue(mul);
+        	                        val = new Value((Number)mul);
+        	                        node.setValue(val);
+	                        }else if(mul == null){
+	                            if(LOGGER.isDebugEnabled())
+	                                LOGGER.debug("Multistate point with xid : " + jo.get("xid") + " has no value");
+	                        }else {
+	                           LOGGER.warn("Multistate point with xid : " + jo.get("xid") + " has non integer value of " + mul);
+	                        }
 	                        break;
 	                    case "Image":
 	                    	node.setValueType(ValueType.STRING);
 	                        node.setAttribute("type", new Value(type));
-	                        String i = jo.get("value");
-	                        model.setValue(i);
-	                        val = new Value(i);
-	                        node.setValue(val);
+	                        Object i = jo.get("value");
+	                        if(i instanceof String) {
+	                            model.setValue(i);
+	                            val = new Value((String)i);
+	                            node.setValue(val);
+	                        }else if(i == null){
+	                            if(LOGGER.isDebugEnabled())
+	                                LOGGER.debug("Image point with xid : " + jo.get("xid") + " has no value");
+	                        }else {
+	                               LOGGER.warn("Image point with xid : " + jo.get("xid") + " has non image value of " + i);
+	                            }
 	                        break;
 	                    case "Alphanumeric":
 	                        node.setValueType(ValueType.STRING);
 	                        node.setAttribute("type", new Value(type));
-	                        String s = jo.get("value");
-	                        model.setValue(s);
-	                        val = new Value(s);
-	                        node.setValue(val);
+	                        Object s = jo.get("value");
+	                        if(s !=null && s instanceof String) {
+        	                        model.setValue(s);
+        	                        val = new Value((String)s);
+        	                        node.setValue(val);
+	                        }else if(s == null){
+	                            if(LOGGER.isDebugEnabled())
+	                                LOGGER.debug("Alphanumeric point with xid : " + jo.get("xid") + " has no value");
+	                        }else {
+	                            LOGGER.warn("Alphanumeric point with xid : " + jo.get("xid") + " has non String value of " + s);
+	                        }
 	                        break;
 	                }
                 }
@@ -372,7 +409,11 @@ public class MangoBodyBuilder {
                 dpm.setValue(entryNum);
                 break;
             case "Multistate":
-                LOGGER.info("sendValue - unimplemented data type: MULTISTATE");
+                Number entryInteger = event.getCurrent().getNumber();
+                val = new Value(entryInteger.intValue());
+                n.setValue(val);
+                dpm.setDataType(PointValueTimeModel.DataTypeEnum.MULTISTATE);
+                dpm.setValue(entryInteger);
                 break;
             case "Image":
                 LOGGER.info("sendValue - unimplemented data type: IMAGE");
